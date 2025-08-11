@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    environment {
+        REMOTE_HOST = '192.168.2.142'
+        REMOTE_USER = 'iman'
+        REPO_URL = 'https://github.com/ihrahimi/DevOps.git'
+        IMAGE_NAME = 'custom-nginx'
+        CLONE_DIR = 'devops-repo' 
+    }
+
+    stages {
+        stage('Clone Git Repository') {
+            steps {
+                sh """
+                # Clean up any existing clone
+                rm -rf ${CLONE_DIR} || true
+                # Clone the repository
+                git clone --branch main --single-branch ${REPO_URL} ${CLONE_DIR}
+                """
+            }
+        }
+
+        stage('Send index.html to Remote') {
+            steps {
+                sh """
+                # Verify the file exists first
+                if [ ! -f "${CLONE_DIR}/jenkins/nginx-simple/index.html" ]; then
+                    echo "Error: index.html not found at expected path!"
+                    exit 1
+                fi
+                # Send to remote server
+                scp ${CLONE_DIR}/jenkins/nginx-simple/index.html ${REMOTE_USER}@${REMOTE_HOST}:/home/${REMOTE_USER}/index.html
+                """
+            }
+        }
+
+        stage('Build and Run Docker Container') {
+            steps {
+                sh """
+                ssh ${REMOTE_USER}@${REMOTE_HOST} '
+                mkdir -p ~/nginx-build || true
+                mv ~/index.html ~/nginx-build/ || { echo "Failed to move index.html"; exit 1; }
+                echo "FROM nginx:latest" > ~/nginx-build/Dockerfile
+                echo "COPY index.html /usr/share/nginx/html/index.html" >> ~/nginx-build/Dockerfile
+                cd ~/nginx-build
+                docker container stop ${IMAGE_NAME} || true
+                docker container rm ${IMAGE_NAME} || true
+                docker build -t ${IMAGE_NAME} . || { echo "Docker build failed"; exit 1; }
+                docker run -d -p 8000:80 --name ${IMAGE_NAME} ${IMAGE_NAME}
+                '
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Docker image built and running on remote server!'
+        }
+        failure {
+            echo '❌ Pipeline failed.'
+        }
+    }
+}
