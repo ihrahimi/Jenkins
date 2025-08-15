@@ -1,7 +1,9 @@
-Overview
+## Overview
+
 This repository contains Jenkins pipelines, shared libraries, and automation scripts to streamline CI/CD processes. It includes examples of declarative and scripted pipelines, integration with various tools, and best practices for Jenkins configuration.
 
-Features
+### Features
+
 Pipeline Implementations
 Basic Pipelines - Hello-world to complex multi-stage examples
 
@@ -11,7 +13,8 @@ Scripted Pipelines - Groovy-based pipelines
 
 Multi-branch Pipelines - Automatic branch detection
 
-Integrations
+### Integrations
+
 SCM Integration - GitHub, GitLab, Bitbucket
 
 Container Integration - Docker and Kubernetes builds
@@ -20,7 +23,8 @@ Artifact Management - Nexus, Artifactory
 
 Notification Systems - Slack, Email, MS Teams
 
-Advanced Features
+### Advanced Features
+
 Shared Libraries - Reusable pipeline components
 
 Parallel Execution - Optimized build times
